@@ -132,11 +132,11 @@ class Appointments_List_Table extends WP_List_Table {
     	$query = ("SELECT B.id, B.bookingStart, A.customerId, CONCAT(C.firstName,' ',C.lastName)as'name', C.email 
 			FROM ".$bookingstable." A join ".$appointmenttable." B on A.appointmentId = B.id 
 			join ".$customertable." C on A.customerId = C.id where B.bookingStart >= now() - INTERVAL 15 day 
-			and not EXISTS (select * from ".$transactiontable." D where B.id = D.app_id) ");
+			and B.bookingStart <= now() and not EXISTS (select * from ".$transactiontable." D where B.id = D.app_id) ");
     	
     	/* -- Ordering parameters -- */
     	//Parameters that are going to be used to order the result
-    	$orderby = !empty($this->getparam["orderby"]) ? mysql_real_escape_string($this->getparam["orderby"]) : 'id';
+    	$orderby = !empty($this->getparam["orderby"]) ? mysql_real_escape_string($this->getparam["orderby"]) : 'B.bookingStart';
     	$order = !empty($this->getparam["order"]) ? mysql_real_escape_string($this->getparam["order"]) : 'desc';
     	if(!empty($orderby) & !empty($order)){ $query.=' ORDER BY '.$orderby.' '.$order; }
  

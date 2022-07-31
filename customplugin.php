@@ -40,7 +40,7 @@ function customplugin_table(){
 		id mediumint(11) NOT NULL AUTO_INCREMENT,
 		logtime DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
 		date DATE NOT NULL,
-		quarter varchar,
+		quarter varchar(20),
 		vat tinyint default 21,
 		amount decimal(13,2),		
 		vatamount decimal(13,2),
