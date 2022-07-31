@@ -115,7 +115,7 @@ register_activation_hook( __FILE__, 'customplugin_table' );
 // Add menu
 function customplugin_menu() {
 
-    add_menu_page("Boekhouding", "Boekhouding","manage_options", "accountingplugin", "displayWelcome",plugins_url('img/icon.png'));
+    add_menu_page("Boekhouding", "Boekhouding","manage_options", "accountingplugin", "displayWelcome",plugins_url('/HappyAccounting/img/icon.png'));
     add_submenu_page("accountingplugin","Afspraak betalen", "Afspraak betalen","manage_options", "allappointments", "displayAppointmentsList");
     add_submenu_page("accountingplugin","Losse aankoop betalen", "Losse aankoop betalen","manage_options", "addtransaction", "displayAddTransaction");
     add_submenu_page("accountingplugin","Storting", "Storting of uitgave","manage_options", "addmoneyTransfer", "displayAddMoneyTransfer");
