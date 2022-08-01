@@ -112,16 +112,16 @@ function customplugin_table(){
 }
 register_activation_hook( __FILE__, 'customplugin_table' );
 
-// Add menu
+// Add menu for user with right amelia_write_appointments
 function customplugin_menu() {
-
-    add_menu_page("Boekhouding", "Kassa","manage_options", "accountingplugin", "displayWelcome",plugins_url('/HappyAccounting/img/icon.png'));
-    add_submenu_page("accountingplugin","Afspraak betalen", "Afspraak betalen","manage_options", "allappointments", "displayAppointmentsList");
-    add_submenu_page("accountingplugin","Losse aankoop betalen", "Losse aankoop betalen","manage_options", "addtransaction", "displayAddTransaction");
-    add_submenu_page("accountingplugin","Storting", "Storting of uitgave","manage_options", "addmoneyTransfer", "displayAddMoneyTransfer");
-    add_submenu_page("accountingplugin","Alle betalingen", "Alle betalingen","manage_options", "alltransactions", "displayTransactionList");
-    add_submenu_page("accountingplugin","Ontvangensten", "Ontvangsten","manage_options", "allincome", "displayIncomeList");
-    add_submenu_page("accountingplugin","Kasboek", "Kasboek","manage_options", "allregister", "displayRegisterList");
+	
+    add_menu_page("Boekhouding", "Kassa","amelia_write_appointments", "accountingplugin", "displayWelcome",plugins_url('/HappyAccounting/img/icon.png'));
+    add_submenu_page("accountingplugin","Afspraak betalen", "Afspraak betalen","amelia_write_appointments", "allappointments", "displayAppointmentsList");
+    add_submenu_page("accountingplugin","Losse aankoop betalen", "Losse aankoop betalen","amelia_write_appointments", "addtransaction", "displayAddTransaction");
+    add_submenu_page("accountingplugin","Storting", "Storting of uitgave","amelia_write_appointments", "addmoneyTransfer", "displayAddMoneyTransfer");
+    add_submenu_page("accountingplugin","Alle betalingen", "Alle betalingen","amelia_write_appointments", "alltransactions", "displayTransactionList");
+    add_submenu_page("accountingplugin","Ontvangensten", "Ontvangsten","amelia_write_appointments", "allincome", "displayIncomeList");
+    add_submenu_page("accountingplugin","Kasboek", "Kasboek","amelia_write_appointments", "allregister", "displayRegisterList");
     
 }
 
