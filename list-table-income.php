@@ -202,18 +202,21 @@ class Income_List_Table extends WP_List_Table {
     	$screen = get_current_screen();
    
     	$tablename = $wpdb->prefix."happyaccounting_income";
-    	$year=date('Y');
+    	
     	if(isset($this->getparam['year'])){
     		$year = $this->getparam['year'];
+    	}else{
+    		$year=date('Y');
     	}
     	
     	if(isset($this->getparam['quarter'])){
     		$quarter = $this->getparam['quarter'];
     		$query = ("SELECT * FROM ".$tablename." where quarter = ".$year.$quarter." ");
     	}else{
-	    	$month=date('m');
 	    	if(isset($this->getparam['month'])){
 	    		$month = $this->getparam['month'];
+	    	}else{
+	    		$month=date('m');
 	    	}
 	    	
 	    	/* -- Preparing your query -- */
@@ -387,11 +390,15 @@ class Income_List_Table extends WP_List_Table {
     	date_default_timezone_set('europe/brussels');
     	$i_datetime=date('Y-m-d H:i:s', time());
     		
-    	if(isset($_GET["quarter"])) 
+    	$period;
+    	if(isset($_GET["quarter"])) {
     		$filename = "ontvangsten_Q".$this->getparam['year'].$this->getparam['quarter']."_" . $i_datetime. ".csv";
-    	else 	
+    		$period = "Q".$this->getparam['year']."-".$this->getparam['quarter'];
+    	}
+    	else {
     		$filename = "ontvangsten_M".$this->getparam['year'].$this->getparam['month']."_" . $i_datetime. ".csv";
-    
+    		$period = "M".$this->getparam['year']."-".$this->getparam['month'];
+    	}
     	$fields = [];
     	foreach ( $columns as $column_key => $column_display_name ) {
     		$fields[]=$column_display_name;
@@ -399,15 +406,15 @@ class Income_List_Table extends WP_List_Table {
     	
     	$queryresult = $this->items;
     
+    	// Set headers to download file rather than displayed
+    	header('Content-Type: text/csv');
+    	header('Content-Disposition: attachment; filename="' . $filename . '";');
+    	// Create a file pointer
+    	$f = fopen('php://output', 'w');
+    	 
+    	fputcsv($f, $fields, $delimiter);
+    	
     	if(!empty($queryresult)){
-    		// Set headers to download file rather than displayed
-    		header('Content-Type: text/csv');
-    		header('Content-Disposition: attachment; filename="' . $filename . '";');
-    		
-    		// Create a file pointer
-    		$f = fopen('php://output', 'w');
-    			
-    		fputcsv($f, $fields, $delimiter);
     		
     		$this->totalamount=0;
     		$this->totalnet=0;
@@ -420,8 +427,12 @@ class Income_List_Table extends WP_List_Table {
     			foreach ( $columns as $column_name => $column_display_name){
     				if($column_display_name=="Id")
     					$lineData[]=$counter;
-    				else
-    					$lineData[]=$row->$column_name;
+    				else{
+    					if(is_numeric($row->$column_name))
+    						$lineData[]=number_format($row->$column_name,2,',','');
+    					else
+    						$lineData[]=$row->$column_name;
+    				}
     				switch ($column_name){
     					case "amount": {$this->totalamount += $row->$column_name; break;}
     					case "netamount": {$this->totalnet += $row->$column_name; break;}
@@ -435,18 +446,20 @@ class Income_List_Table extends WP_List_Table {
     		foreach ( $columns as $column_name => $column_display_name){
     			switch ($column_name){
     				case "date": {$lineData[]='Totaal'; break;}
-    				case "amount": {$lineData[]=$this->totalamount; break;}
-    				case "netamount": {$lineData[]=$this->totalnet; break;}
-    				case "vatamount": {$lineData[]=$this->totalvat; break;}
+    				case "amount": {$lineData[]=number_format($this->totalamount,2,',',''); break;}
+    				case "netamount": {$lineData[]=number_format($this->totalnet,2,',',''); break;}
+    				case "vatamount": {$lineData[]=number_format($this->totalvat,2,',',''); break;}
     				default :  {$lineData[]='';}
     			}
     		}
     		fputcsv($f, $lineData, $delimiter);
-    		
-    		fclose($f);
     			
-    		die;
-    			
+    	}else{
+    		$lineData = [];
+    		$lineData[] = "Geen data voor ".$period;
+    		fputcsv($f, $lineData, $delimiter);
     	}
+    	fclose($f);    	 
+    	die;
     }
 }

@@ -5,18 +5,17 @@ if(!class_exists('Register_List_Table')){
 	require_once( 'list-table-register.php' );
 }
 $regtable = new Register_List_Table();
-if(isset($_GET["export"])){
-	if(isset($_GET["month"])) $inctable->getparam['month'] = $_GET["month"];
+if(isset($_GET["export"])){ 
+	if(isset($_GET["month"])) $regtable->getparam['month'] = $_GET["month"];
 	else {
 		echo "incorrect parameter month";
 		exit;
 	}
-	if(isset($_GET["year"])) $inctable->getparam['year'] = $_GET["year"];
+	if(isset($_GET["year"])) $regtable->getparam['year'] = $_GET["year"];
 	else {
 		echo "incorrect parameter year";
 		exit;
 	}
-
 	$regtable->prepare_items();
 	$regtable->exportCSV();
 }

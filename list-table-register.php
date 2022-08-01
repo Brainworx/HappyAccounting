@@ -57,6 +57,7 @@ class Register_List_Table extends WP_List_Table {
     		if(isset($this->getparam['year']))
     			$y = $this->getparam['year'];
     		$m = 1;
+
     		if(isset($this->getparam['month'])){
     			$m = $this->getparam['month'];
     			$m -= 1;
@@ -172,17 +173,21 @@ class Register_List_Table extends WP_List_Table {
     	$screen = get_current_screen();
    
     	$tablename = $wpdb->prefix."happyaccounting_register";
-    	$month=date('m');
+    	
     	if(isset($this->getparam['month'])){
     		$month = $this->getparam['month'];
+    	}else{
+    		$month=date('m');
     	}
-    	$year=date('Y');
+    	
     	if(isset($this->getparam['year'])){
     		$year = $this->getparam['year'];
+    	}else{
+    		$year=date('Y');
     	}
     	/* -- Preparing your query -- */
     	$query = ("SELECT * FROM ".$tablename." where date >= DATE('".$year."-".$month."-01') and date <= LAST_DAY(DATE('".$year."-".$month."-01')) ");
-    	
+
     	/* -- Ordering parameters -- */
     	//Parameters that are going to be used to order the result
     	$orderby = !empty($this->getparam["orderby"]) ? mysql_real_escape_string($this->getparam["orderby"]) : 'date';
@@ -365,6 +370,7 @@ class Register_List_Table extends WP_List_Table {
     	return $result;
     }
     function exportCSV(){
+
     	//Get the columns registered in the get_columns
     	list( $columns ) = $this->get_column_info();
     	$delimiter = ";";
@@ -376,39 +382,46 @@ class Register_List_Table extends WP_List_Table {
     	foreach ( $columns as $column_key => $column_display_name ) {
     		$fields[]=$column_display_name;
     	}
+    	// Set headers to download file rather than displayed
+    	header('Content-Type: text/csv');
+    	header('Content-Disposition: attachment; filename="' . $filename . '";');
+    	
+    	// Create a file pointer
+    	$f = fopen('php://output', 'w');
     	 
+    	fputcsv($f, $fields, $delimiter);
+    	$period = "";
+    	if((!isset($this->getparam['year'])||($this->getparam['year'] == $currentyear && $this->getparam['month'] == $currentmonth))){
+    		$amounts2 = $this->fetchTotal('"'.date('Y-m-01').'"');
+    		$amounts = $this->fetchTotal();
+    		$period = date('Y-m');
+    	}else{
+    		$dt = date('"'.$this->getparam['year'].'-'.$this->getparam['month'].'-01"');
+    		$amounts2 = $this->fetchTotal($dt);
+    		$amounts = $this->fetchTotal('DATE_ADD('.$dt.', INTERVAL 1 MONTH)');
+    		$period = $this->getparam['year'].'-'.$this->getparam['month'];
+    	}
+    	     	
+    	$this->totalin=0;
+    	$this->totalout=0;
+    	
     	$queryresult = $this->items;
-    
     	if(!empty($queryresult)){
-    		// Set headers to download file rather than displayed
-    		header('Content-Type: text/csv');
-    		header('Content-Disposition: attachment; filename="' . $filename . '";');
-    
-    		// Create a file pointer
-    		$f = fopen('php://output', 'w');
-    		 
-    		fputcsv($f, $fields, $delimiter);
-    
-    		$this->totalin=0;
-    		$this->totalout=0;
+
     		$counter = 1;
-    		if((!isset($this->getparam['year'])||($this->getparam['year'] == $currentyear && $this->getparam['month'] == $currentmonth))){
-    			$amounts2 = $this->fetchTotal('"'.date('Y-m-01').'"');
-    			$amounts = $this->fetchTotal();
-    		}else{
-    			$dt = date('"'.$this->getparam['year'].'-'.$this->getparam['month'].'-01"');
-    			$amounts2 = $this->fetchTotal($dt);
-    			$amounts = $this->fetchTotal('DATE_ADD('.$dt.', INTERVAL 1 MONTH)');
-    		}
-    		 
+    		
     		// Output each row of the data, format line as csv and write to file pointer
     		foreach ($queryresult as $row){
     			$lineData = [];
     			foreach ( $columns as $column_name => $column_display_name){
     				if($column_display_name=="Id")
     					$lineData[]=$counter;
-    				else
-    					$lineData[]=$row->$column_name;
+    				else{
+    					if(is_numeric($row->$column_name))
+    						$lineData[]=number_format($row->$column_name,2,',','');
+    					else
+    						$lineData[]=$row->$column_name;
+    				}
     			switch ($column_name){
     				case "amountin": {
     					$this->totalin += $row->$column_name;
@@ -422,6 +435,7 @@ class Register_List_Table extends WP_List_Table {
     			}		
     			}
     			fputcsv($f, $lineData, $delimiter);
+
     			$counter++;
     		}
     		$lineData = [];
@@ -433,36 +447,39 @@ class Register_List_Table extends WP_List_Table {
     			}
     		}
     		fputcsv($f, $lineData, $delimiter);
-    		
-    		$lineData = [];
-    		
-    		fputcsv($f, $lineData, $delimiter);
-    		$lineData = [];
-
-    		$lineData[]="";
-    		$lineData[]="Eindsaldo vorige maand";
-    		if(isset($amounts2[0]))
-    			$lineData[]=$amounts2[0]->balance;
-    		else
-    			$lineData[]=0;
-    		fputcsv($f, $lineData, $delimiter);
-    		$lineData = [];
-    		
-    		$lineData[]="";
-    		$lineData[]="Saldo deze maand";
-    		$lineData[]=$this->totalin - $this->totalout;
-    		fputcsv($f, $lineData, $delimiter);
-    		$lineData = [];
-    		
-    		$lineData[]="";
-    		$lineData[]="Eindtotaal in kassa";
-     		$lineData[]=$amounts[0]->balance;
-     		fputcsv($f, $lineData, $delimiter);
-     		
-    		fclose($f);
-    		 
-    		die;
-    		 
+    		     		
     	}
+    	else{
+    		$lineData = [];
+    		$lineData[] = "Geen nieuwe data voor ". $period;
+    		fputcsv($f, $lineData, $delimiter);
+    	}
+    	
+    	$lineData = [];
+    	fputcsv($f, $lineData, $delimiter);
+    	
+    	$lineData = [];
+    	
+    	$lineData[]="";
+    	$lineData[]="Eindsaldo vorige maand";
+    	if(isset($amounts2[0]))
+    		$lineData[]=number_format($amounts2[0]->balance,2,',','');
+    	else
+    		$lineData[]=0;
+    	fputcsv($f, $lineData, $delimiter);
+    	$lineData = [];
+    	
+    	$lineData[]="";
+    	$lineData[]="Saldo deze maand";
+    	$lineData[]=number_format($this->totalin - $this->totalout,2,',','');
+    	fputcsv($f, $lineData, $delimiter);
+    	$lineData = [];
+    	
+    	$lineData[]="";
+    	$lineData[]="Eindtotaal in kassa";
+    	$lineData[]=number_format($amounts[0]->balance,2,',','');
+    	fputcsv($f, $lineData, $delimiter);
+    	fclose($f);    	 
+    	die;
     }
 }
