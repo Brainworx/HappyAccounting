@@ -65,12 +65,12 @@ class Transactions_List_Table extends WP_List_Table {
      */
     function get_columns() {
     	return $columns= array(
-    			'id'=>__('Betaling'),
+    			//'id'=>__('Betaling'),
     			'datetime'=>__('Datum'),
     			'name'=>__('Klant'),
     			'email'=>__('Email'),
     			'description'=>__('Omschrijving'),
-    			'cust_id'=>__('Klant id'),
+    			//'cust_id'=>__('Klant id'),
     			'amount'=>__('Bedrag'),
     			'vat'=>__('BTW'),
     			'paymenttype'=>__('Betaalwijze')
@@ -139,7 +139,7 @@ class Transactions_List_Table extends WP_List_Table {
     	    	
     	/* -- Ordering parameters -- */
     	//Parameters that are going to be used to order the result
-    	$orderby = !empty($this->getparam["orderby"]) ? mysql_real_escape_string($this->getparam["orderby"]) : 'id';
+    	$orderby = !empty($this->getparam["orderby"]) ? mysql_real_escape_string($this->getparam["orderby"]) : 'datetime';
     	$order = !empty($this->getparam["order"]) ? mysql_real_escape_string($this->getparam["order"]) : 'desc';
     	if(!empty($orderby) & !empty($order)){ $query.=' ORDER BY '.$orderby.' '.$order; }
  

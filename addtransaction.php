@@ -47,7 +47,11 @@ if(isset($_POST['but_submit'])){
         $insert_sql = "INSERT INTO ".$tablename."(datetime,date,name,email,description,cust_id,app_id,amount,vat,paymenttype ) 
         		values('".$datetime."','".$date."','".$name."','".$email."','".$description."','".$cust_id."','".$app_id."','".$amount."','".$vat."','".$paymenttype."')";
         $wpdb->query($insert_sql);
-        echo "Bewaren gelukt";
+        echo "Bewaren gelukt<br>";
+        echo sprintf('<a href="?page=%s">Naar all betalingen</a>','alltransactions');
+        echo sprintf(' - <a href="?page=%s">Naar ontvangstenboek</a>','allincome');
+        echo sprintf(' - <a href="?page=%s">Naar kasboek</a>','allregister');
+        die;
 	}
 
 }
@@ -73,7 +77,7 @@ if(isset($_POST['but_submit'])){
 			<td>Omschrijving</td>
 			<td><input type='text' name='txt_description'></td>
 		</tr>
-		<?php }?>
+		<?php }?>		
 		<tr>
 			<td>Btw tarief</td>
 			<td><input type='number' name='num_vat' min="0" value="21"></td>
