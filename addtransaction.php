@@ -9,11 +9,12 @@ $i_date=date('Y-m-d', time());
 
 if(isset($_GET['bid'])){
 	$i_bid = $_GET['bid'];
-	
-	$entries = $wpdb->get_results("SELECT B.id, B.bookingStart, A.customerId, 
+	$query="SELECT B.id, B.bookingStart, A.customerId, 
 			CONCAT(C.firstName,' ',C.lastName)as'name', C.email, A.appointmentId
 			FROM ".$bookingstable." A join ".$appointmenttable." B on A.appointmentId = B.id
-			join ".$customertable." C on A.customerId = C.id where A.id = ".$i_bid);
+			join ".$customertable." C on A.customerId = C.id where A.id = ".$i_bid;
+	$entries = $wpdb->get_results($query);
+
 	if(count($entries)>0){
 		$entry = $entries[0];	
 		$i_appid = $entry->appointmentId;
