@@ -87,11 +87,19 @@ if(isset($_POST['but_submit'])){
 			<td><input type='number' name='num_amount' min="0" value="0" step="0.01" pattern="[0-9]*" onblur="this.parentNode.parentNode.style.backgroundColor=/^\d+(?:\.\d{1,2})?$/.test(this.value)?'inherit':'red'" required></td>
 		</tr>
 		<tr>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
 			<td>Betaalwijze</td>
 			<td><input type='radio' id="type1" name='rd_type' value="cash" required checked><label for="type1">Cash</label>
 			<input type='radio' id="type2" name='rd_type' value="app" required><label for="type2">App</label>
 			<input type='radio' id="type3" name='rd_type' value="factuur" required><label for="type3">Factuur</label>
 			<input type='radio' id="type4" name='rd_type' value="bon" required><label for="type4">Bon</label></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
 		</tr>
 		<tr>
 			<td>&nbsp;</td>
