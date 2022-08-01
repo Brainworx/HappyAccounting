@@ -434,6 +434,7 @@ class Income_List_Table extends WP_List_Table {
     		$lineData = [];
     		foreach ( $columns as $column_name => $column_display_name){
     			switch ($column_name){
+    				case "date": {$lineData[]='Totaal'; break;}
     				case "amount": {$lineData[]=$this->totalamount; break;}
     				case "netamount": {$lineData[]=$this->totalnet; break;}
     				case "vatamount": {$lineData[]=$this->totalvat; break;}
