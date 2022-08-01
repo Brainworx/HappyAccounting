@@ -69,8 +69,8 @@ function customplugin_table(){
 			DECLARE var_Vat decimal(13,2);
 			DECLARE var_Net decimal(13,2);
 			IF (NEW.paymenttype = 'cash' OR NEW.paymenttype = 'app') THEN	
-				SET var_Vat = NEW.amount/NEW.vat;
-			    SET var_Net = NEW.amount-var_Vat;
+				SET var_Net = NEW.amount/(1+(NEW.vat/100));
+			    SET var_Vat = NEW.amount-var_Net;
 				IF EXISTS (SELECT * FROM $incometable where date = NEW.date and vat=NEW.vat) THEN
 					UPDATE $incometable 
 							SET vat = NEW.vat, amount = amount + NEW.amount,
@@ -115,7 +115,7 @@ register_activation_hook( __FILE__, 'customplugin_table' );
 // Add menu
 function customplugin_menu() {
 
-    add_menu_page("Boekhouding", "Boekhouding","manage_options", "accountingplugin", "displayWelcome",plugins_url('/HappyAccounting/img/icon.png'));
+    add_menu_page("Boekhouding", "Kassa","manage_options", "accountingplugin", "displayWelcome",plugins_url('/HappyAccounting/img/icon.png'));
     add_submenu_page("accountingplugin","Afspraak betalen", "Afspraak betalen","manage_options", "allappointments", "displayAppointmentsList");
     add_submenu_page("accountingplugin","Losse aankoop betalen", "Losse aankoop betalen","manage_options", "addtransaction", "displayAddTransaction");
     add_submenu_page("accountingplugin","Storting", "Storting of uitgave","manage_options", "addmoneyTransfer", "displayAddMoneyTransfer");
