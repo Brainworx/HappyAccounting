@@ -122,6 +122,29 @@ class Income_List_Table extends WP_List_Table {
     		//The code that goes after the table is there
     		//echo"Hi, I'm after the table";
     		echo "Totaal in deze periode: ".$this->totalnet." + ".$this->totalvat." btw = ".$this->totalamount." EUR.<br>";
+    		
+    		if(isset($this->getparam['quarter'])){
+    			$period = $this->getparam['year'].'-Q'.$this->getparam['quarter'];
+    			$amounts = $this->fetchQExpenses($this->getparam['year'],$this->getparam['quarter']);
+    			$amounts_in = $this->fetchQIncome($this->getparam['year'].$this->getparam['quarter']);
+    		}
+    		elseif((!isset($this->getparam['year'])||($this->getparam['year'] == $currentyear && $this->getparam['month'] == $currentmonth))){
+    			$amounts = $this->fetchExpenses();
+    			$amounts_in = $this->fetchIncome();
+    			$period = "tem ".date('Y-m');
+    		}else{
+    			$dt = date('"'.$this->getparam['year'].'-'.$this->getparam['month'].'-01"');
+    			$amounts = $this->fetchExpenses('DATE_ADD('.$dt.', INTERVAL 1 MONTH)');
+    			$amounts_in = $this->fetchIncome('DATE_ADD('.$dt.', INTERVAL 1 MONTH)');
+    			$period = "tem ".$this->getparam['year'].'-'.$this->getparam['month'];
+    		}
+    		echo "<br><b>Resultaten ".$period."</b><br>";
+    		echo "Inkomsten: ".$amounts_in[0]->total." EUR<br>";
+    		echo "Uitgaven: ".$amounts[0]->total." EUR<br>";
+    		echo "Resultaat: ".($amounts_in[0]->total + $amounts[0]->total)." EUR";
+    		$outnet = number_format( $amounts_in[0]->total_net+($amounts[0]->total/1.21),2,',','');
+    		echo " ( ".$outnet." EUR excl BTW )<br>";
+    		
     		echo sprintf('<br><a href="?page=%s">Naar all betalingen</a>','alltransactions');
     		echo sprintf(' - <a href="?page=%s">Naar kasboek</a><br>','allregister');
     		
@@ -384,6 +407,93 @@ class Income_List_Table extends WP_List_Table {
             /*$2%s*/ $this->row_actions($actions)
         );
     }    
+    /*
+     * returns result [total]
+     */
+    function fetchExpenses($maxdate = null){
+    	global $wpdb;
+    	$tablename = $wpdb->prefix."happyaccounting_transaction";
+    	/* -- Preparing your query -- */
+    	$query = ("SELECT sum(amount) as total FROM ".$tablename." where paymenttype in ('cash-out','invoice-out')");
+    	if(isset($maxdate)){
+    		$query = $query . ' and date < '.$maxdate;
+    	}
+
+    	$result = $wpdb->get_results($query);
+    	if(empty($result[0]->total))
+   			$result[0]->total=0;
+    	return $result;
+    }
+    /*
+     * returns result [total]
+     */
+    function fetchQExpenses($year,$quarter){
+    	global $wpdb;
+    	$tablename = $wpdb->prefix."happyaccounting_transaction";
+    	switch ($quarter){
+    		case 4:
+    			$datefrom = date($year."-10-01");
+    			$dateto = date($year."-12-31");
+    			break;
+    		case 3:
+    			$datefrom = date($year."-7-01");
+    			$dateto = date($year."-9-30");
+    			break;
+    		case 2:
+    			$datefrom = date($year."-4-01");
+    			$dateto = date($year."-6-30");
+   				break;
+    		default:
+   				$datefrom = date($year."-1-01");
+   				$dateto = date($year."-3-31");
+   				break;
+    	}
+    	
+    	/* -- Preparing your query -- */
+    	$query = ("SELECT sum(amount) as total FROM ".$tablename." where paymenttype in ('cash-out','invoice-out')");
+    	$query = $query . ' and date >= "'.$datefrom.'" and date <= "'.$dateto.'"';
+
+    	$result = $wpdb->get_results($query);
+    	if(empty($result[0]->total))
+    		$result[0]->total=0;
+    	return $result;
+    }
+    /*
+     * returns result [total, total_net]
+     */
+    function fetchIncome($maxdate=null){
+    	global $wpdb;
+    	$tablename = $wpdb->prefix."happyaccounting_income";
+    	/* -- Preparing your query -- */
+    	$query = ("SELECT sum(amount) as total, sum(netamount) as total_net FROM ".$tablename);
+    	if(isset($maxdate)){
+    		$query = $query . ' where date < '.$maxdate;
+    	}
+    
+    	$result = $wpdb->get_results($query);
+    	if(empty($result[0]->total))
+    		$result[0]->total=0;
+    	if(empty($result[0]->total_net))
+    		$result[0]->total_net=0;
+    	return $result;
+    }
+    /*
+     * returns result [total, total_net]
+     */
+    function fetchQIncome($quarter){
+    	global $wpdb;
+    	$tablename = $wpdb->prefix."happyaccounting_income";
+    	/* -- Preparing your query -- */
+    	$query = ("SELECT sum(amount) as total, sum(netamount) as total_net FROM ".$tablename);
+    	$query = $query . ' where quarter = '.$quarter;
+
+    	$result = $wpdb->get_results($query);
+    	if(empty($result[0]->total))
+    		$result[0]->total=0;
+    	if(empty($result[0]->total_net))
+    		$result[0]->total_net=0;
+    	return $result;
+    }
     function exportCSV(){
     	//Get the columns registered in the get_columns 
     	list( $columns ) = $this->get_column_info();

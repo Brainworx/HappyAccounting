@@ -14,13 +14,19 @@ if(isset($_POST['but_submit'])){
 	$description = $_POST['txt_description'];
 	$amount = $_POST['num_amount'];
 	$amount *= -1;
-	$paymenttype = 'cash-out';
+	$paymenttype = $_POST['rd_type'];
+	if(strcmp($paymenttype,"cash-out")==0){
+		$vat = 0;
+	}else{
+		$vat = 21;
+	}
 	
 	$tablename = $wpdb->prefix."happyaccounting_transaction";
 
 	if($date != '' && $amount != '' & $paymenttype != ''){
         $insert_sql = "INSERT INTO ".$tablename."(datetime,date,name,email,description,cust_id,app_id,amount,vat,paymenttype ) 
-        		values('".$datetime."','".$date."','".$name."','".$email."','".$description."','".$cust_id."','".$app_id."','".$amount."','".$vat."','".$paymenttype."')";
+        		values('".$datetime."','".$date."','".$name."','".$email."','".$description."','0','0','".$amount."','".$vat."','".$paymenttype."')";
+
         $wpdb->query($insert_sql);
 
         echo "<br>Bewaren gelukt<br>";
@@ -39,11 +45,25 @@ if(isset($_POST['but_submit'])){
 		</tr>
 		<tr>
 			<td>Omschrijving</td>
-			<td><input type='text' name='txt_description' value='storting op bankrekering'></td>
+			<td><input type='text' name='txt_description' value=''></td>
 		</tr>
 		<tr>
 			<td>Bedrag</td>
 			<td><input type='number' name='num_amount' min="0" value="0" step="0.01" pattern="[0-9]*" onblur="this.parentNode.parentNode.style.backgroundColor=/^\d+(?:\.\d{1,2})?$/.test(this.value)?'inherit':'red'" required></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>Type</td>
+			<td><input type='radio' id="type1" name='rd_type' value="cash-to-bank" required checked><label for="type1">Storting naar bank</label>
+			<br><input type='radio' id="type2" name='rd_type' value="cash-out" required><label for="type2">Aankoop Cash</label>
+			<br><input type='radio' id="type3" name='rd_type' value="factuur-out" required><label for="type3">Aankoop op Factuur</label>
+			</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
 		</tr>
 		<tr>
 			<td>&nbsp;</td>

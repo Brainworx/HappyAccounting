@@ -94,7 +94,7 @@ function customplugin_table(){
 			        END IF;
 				END IF;
 			END IF;
-			IF (NEW.paymenttype = 'cash-out') THEN
+			IF (NEW.paymenttype = 'cash-out' OR new.paymenttype = 'cash-to-bank') THEN
 		        IF EXISTS (SELECT * FROM $registertable where date = NEW.date) THEN
 		            UPDATE $registertable 
 		                    SET amountout = amountout + (NEW.amount*-1) WHERE date = NEW.date;
