@@ -225,7 +225,13 @@ class Appointments_List_Table extends WP_List_Table {
     			if(strcmp($column_name,"action")==0){
     				echo '<td '.$attributes.'>'.sprintf('<a href="?page=%s&bid=%s">Betaal</a>','addtransaction',$rec->id).'</td>';
     			}else{
-    				echo '<td '.$attributes.'>'.$rec->$column_name.'</td>';
+    				if(strcmp($column_name,"bookingStart")==0){
+    					$date = new DateTime($rec->$column_name);
+    					$date->setTimezone(new DateTimeZone("europe/brussels"));
+    					echo '<td '.$attributes.'>'.$date->format('Y-m-d H:i').'</td>';
+    				}else{
+    					echo '<td '.$attributes.'>'.$rec->$column_name.'</td>';
+    				}
     			}
     			
     		}
