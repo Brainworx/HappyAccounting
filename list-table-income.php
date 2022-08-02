@@ -142,7 +142,7 @@ class Income_List_Table extends WP_List_Table {
     		echo "<br><b>Resultaten ".$period."</b><br>";
     		echo "Inkomsten: ".$amounts_in[0]->total." EUR<br>";
     		echo "Uitgaven: ".$amounts[0]->total." EUR<br>";
-    		echo "Resultaat: ".($amounts_in[0]->total + $amounts[0]->total)." EUR";
+    		echo "Resultaat: <b>".($amounts_in[0]->total + $amounts[0]->total)." EUR</b>";
     		$outnet = number_format( $amounts_in[0]->total_net+($amounts[0]->total/1.21),2,',','');
     		echo " ( ".$outnet." EUR excl BTW )<br>";
     		
@@ -418,7 +418,7 @@ class Income_List_Table extends WP_List_Table {
     	if(!isset($mindate)){
     		$mindate = date("Y-01-01");
     	}
-    	$query = ("SELECT sum(amount) as total FROM ".$tablename." where paymenttype in ('cash-out','invoice-out') and date >= ".$mindate);
+    	$query = ("SELECT sum(amount) as total FROM ".$tablename." where paymenttype in ('cash-out','factuur-out') and date >= '".$mindate."'");
     	if(isset($maxdate)){
     		$query = $query .' and date < '.$maxdate;
     	}
@@ -454,7 +454,7 @@ class Income_List_Table extends WP_List_Table {
     	}
     	
     	/* -- Preparing your query -- */
-    	$query = ("SELECT sum(amount) as total FROM ".$tablename." where paymenttype in ('cash-out','invoice-out')");
+    	$query = ("SELECT sum(amount) as total FROM ".$tablename." where paymenttype in ('cash-out','factuur-out')");
     	$query = $query . ' and date >= "'.$datefrom.'" and date <= "'.$dateto.'"';
 
     	$result = $wpdb->get_results($query);
