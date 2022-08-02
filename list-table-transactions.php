@@ -57,6 +57,8 @@ class Transactions_List_Table extends WP_List_Table {
     	if ( $which == "bottom" ){
     		//The code that goes after the table is there
     		//echo"Hi, I'm after the table";
+    		echo sprintf('<br><a href="?page=%s">Naar ontvangstenboek</a>','allincome');
+    		echo sprintf(' - <a href="?page=%s">Naar kasboek</a>','allregister');
     	}
     }
     /**

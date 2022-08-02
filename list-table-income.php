@@ -122,7 +122,8 @@ class Income_List_Table extends WP_List_Table {
     		//The code that goes after the table is there
     		//echo"Hi, I'm after the table";
     		echo "Totaal in deze periode: ".$this->totalnet." + ".$this->totalvat." btw = ".$this->totalamount." EUR.<br>";
-
+    		echo sprintf('<br><a href="?page=%s">Naar all betalingen</a>','alltransactions');
+    		echo sprintf(' - <a href="?page=%s">Naar kasboek</a><br>','allregister');
     		
     		if(isset($this->getparam['quarter'])){
     			//note the noheader param to avoid error "header already sent"

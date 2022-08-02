@@ -101,6 +101,9 @@ class Register_List_Table extends WP_List_Table {
     		else 
     			echo "<br><b>Bedrag in kassa: 0 EUR</b><br>";
     		
+    		echo sprintf('<br><a href="?page=%s">Naar alle betalingen</a>','alltransactions');
+    		echo sprintf(' - <a href="?page=%s">Naar ontvangstenboek</a><br>','allincome');
+    		
     		//note the noheader param to avoid error "header already sent"
     		echo sprintf('<br><a href="?page=%s&year=%s&month=%s&export=%s&noheader=1">Download gegevens</a><br>','allregister',$this->getparam['year'],$this->getparam['month'],'csv');
     		

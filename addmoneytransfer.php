@@ -25,8 +25,6 @@ if(isset($_POST['but_submit'])){
 
         echo "<br>Bewaren gelukt<br>";
         include "displaytransactionlist.php";
-        echo sprintf('<a href="?page=%s">Naar ontvangstenboek</a>','allincome');
-        echo sprintf(' - <a href="?page=%s">Naar kasboek</a>','allregister');
         die;
 	}
 
