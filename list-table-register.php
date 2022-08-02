@@ -90,7 +90,7 @@ class Register_List_Table extends WP_List_Table {
     			$amounts = $this->fetchTotal('DATE_ADD('.$dt.', INTERVAL 1 MONTH)');
     		}	
     			
-    		echo "Totaal in deze periode: ".$this->count." dagen - ".$this->totalin." EUR IN - ".$this->totalout." EUR UIT<br>";
+    		echo "<b>Totaal in deze periode: ".$this->count." dagen - ".$this->totalin." EUR IN - ".$this->totalout." EUR UIT</b><br>";
     		if(isset($amounts2[0]->balance))
     			echo "<br>Eindsaldo vorige maand: ".$amounts2[0]->balance." EUR";
     		else 

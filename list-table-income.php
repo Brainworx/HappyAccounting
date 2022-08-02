@@ -121,7 +121,7 @@ class Income_List_Table extends WP_List_Table {
     		
     		//The code that goes after the table is there
     		//echo"Hi, I'm after the table";
-    		echo "Totaal in deze periode: ".$this->totalnet." + ".$this->totalvat." btw = ".$this->totalamount." EUR.<br>";
+    		echo "<b>Totaal in deze periode: ".$this->totalnet." + ".$this->totalvat." btw = ".$this->totalamount." EUR.</b><br>";
     		
     		if(isset($this->getparam['quarter'])){
     			$period = $this->getparam['year'].'-Q'.$this->getparam['quarter'];
@@ -131,12 +131,13 @@ class Income_List_Table extends WP_List_Table {
     		elseif((!isset($this->getparam['year'])||($this->getparam['year'] == $currentyear && $this->getparam['month'] == $currentmonth))){
     			$amounts = $this->fetchExpenses();
     			$amounts_in = $this->fetchIncome();
-    			$period = "tem ".date('Y-m');
+    			$period = date('Y-1')." tem ".date('Y-m');
     		}else{
     			$dt = date('"'.$this->getparam['year'].'-'.$this->getparam['month'].'-01"');
-    			$amounts = $this->fetchExpenses('DATE_ADD('.$dt.', INTERVAL 1 MONTH)');
-    			$amounts_in = $this->fetchIncome('DATE_ADD('.$dt.', INTERVAL 1 MONTH)');
-    			$period = "tem ".$this->getparam['year'].'-'.$this->getparam['month'];
+    			$dtfrom = date('"'.$this->getparam['year'].'-01-01"');
+    			$amounts = $this->fetchExpenses('DATE_ADD('.$dt.', INTERVAL 1 MONTH)',$dtfrom);
+    			$amounts_in = $this->fetchIncome('DATE_ADD('.$dt.', INTERVAL 1 MONTH)',$dtfrom);
+    			$period = $this->getparam['year']."-01 tem ".$this->getparam['year'].'-'.$this->getparam['month'];
     		}
     		echo "<br><b>Resultaten ".$period."</b><br>";
     		echo "Inkomsten: ".$amounts_in[0]->total." EUR<br>";
@@ -410,13 +411,16 @@ class Income_List_Table extends WP_List_Table {
     /*
      * returns result [total]
      */
-    function fetchExpenses($maxdate = null){
+    function fetchExpenses($maxdate = null,$mindate=null){
     	global $wpdb;
     	$tablename = $wpdb->prefix."happyaccounting_transaction";
     	/* -- Preparing your query -- */
-    	$query = ("SELECT sum(amount) as total FROM ".$tablename." where paymenttype in ('cash-out','invoice-out')");
+    	if(!isset($mindate)){
+    		$mindate = date("Y-01-01");
+    	}
+    	$query = ("SELECT sum(amount) as total FROM ".$tablename." where paymenttype in ('cash-out','invoice-out') and date >= ".$mindate);
     	if(isset($maxdate)){
-    		$query = $query . ' and date < '.$maxdate;
+    		$query = $query .' and date < '.$maxdate;
     	}
 
     	$result = $wpdb->get_results($query);
@@ -461,13 +465,16 @@ class Income_List_Table extends WP_List_Table {
     /*
      * returns result [total, total_net]
      */
-    function fetchIncome($maxdate=null){
+    function fetchIncome($maxdate=null,$mindate=null){
     	global $wpdb;
     	$tablename = $wpdb->prefix."happyaccounting_income";
     	/* -- Preparing your query -- */
-    	$query = ("SELECT sum(amount) as total, sum(netamount) as total_net FROM ".$tablename);
+    	if(!isset($mindate)){
+    		$mindate = "'".date("Y-1-1")."'";
+    	}
+    	$query = ("SELECT sum(amount) as total, sum(netamount) as total_net FROM ".$tablename." where date >= ".$mindate);
     	if(isset($maxdate)){
-    		$query = $query . ' where date < '.$maxdate;
+    		$query = $query . ' and date < '.$maxdate;
     	}
     
     	$result = $wpdb->get_results($query);
