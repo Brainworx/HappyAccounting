@@ -15,7 +15,7 @@ if(isset($_POST['but_submit'])){
 	$amount = $_POST['num_amount'];
 	$amount *= -1;
 	$paymenttype = $_POST['rd_type'];
-	if(strcmp($paymenttype,"cash-out")==0){
+	if(strcmp($paymenttype,"cash-to-bank")==0){
 		$vat = 0;
 	}else{
 		$vat = 21;
