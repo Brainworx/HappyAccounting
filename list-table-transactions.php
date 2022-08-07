@@ -68,9 +68,9 @@ class Transactions_List_Table extends WP_List_Table {
     function get_columns() {
     	return $columns= array(
     			//'id'=>__('Betaling'),
-    			'datetime'=>__('Datum'),
+    			'datetime'=>__('Log Datum'),
+    			'date'=>__('Datum'),
     			'name'=>__('Klant'),
-    			'email'=>__('Email'),
     			'description'=>__('Omschrijving'),
     			//'cust_id'=>__('Klant id'),
     			'amount'=>__('Bedrag'),

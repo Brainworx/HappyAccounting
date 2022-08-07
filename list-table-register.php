@@ -92,10 +92,12 @@ class Register_List_Table extends WP_List_Table {
     			
     		echo "<b>Totaal in deze periode: ".$this->count." dagen - ".$this->totalin." EUR IN - ".$this->totalout." EUR UIT</b><br>";
     		if(isset($amounts2[0]->balance))
-    			echo "<br>Eindsaldo vorige maand: ".$amounts2[0]->balance." EUR";
-    		else 
-    			echo "<br>Eindsaldo vorige maand: 0 EUR";
-    		echo "<br>Saldo deze maand: ".($this->totalin - $this->totalout)." EUR";
+    			echo "<br>Roze kassa: ".($amounts2[0]->balance - $this->totalout)." EUR";
+    		elseif($this->totalout>0){
+    			echo "<br>Roze kassa: -".$this->totalout." EUR";
+    		}else
+    			echo "<br>Roze kassa: 0 EUR";
+    		echo "<br>DagKassa: ".$this->totalin." EUR";
     		if(isset($amounts[0]->balance))
     			echo "<br><b>Bedrag in kassa: ".$amounts[0]->balance." EUR</b><br>";
     		else 
