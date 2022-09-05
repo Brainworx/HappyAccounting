@@ -26,7 +26,7 @@ if(!class_exists('WP_List_Table')){
  */
 class Register_List_Table extends WP_List_Table {
 	public $getparam = [];
-	private $totalin=0,$totalout=0, $count=0;
+	private $totalInOut=[], $count=0;
     
     /** ************************************************************************
      * REQUIRED. Set up a constructor that references the parent constructor. We 
@@ -89,15 +89,40 @@ class Register_List_Table extends WP_List_Table {
     			$amounts2 = $this->fetchTotal($dt);
     			$amounts = $this->fetchTotal('DATE_ADD('.$dt.', INTERVAL 1 MONTH)');
     		}	
+    		/* -- Prepare totals -- */
+    		if(isset($this->getparam['year'])){
+    			$totalInOut = $this->fetchTotalInOut($this->getparam['year'],$this->getparam['month']);
+    		}else{
+    			$totalInOut = $this->fetchTotalInOut($currentyear,$currentmonth);
+    		}
     			
-    		echo "<b>Totaal in deze periode: ".$this->count." dagen - ".$this->totalin." EUR IN - ".$this->totalout." EUR UIT</b><br>";
+    		if(isset($totalInOut[0])){
+    			if(isset($totalInOut[0]->totalin))
+    				echo "<b>Totaal in deze periode: ".$totalInOut[0]->totalin." EUR IN - ";
+    			else
+    				echo "<b>Totaal in deze periode: 0 EUR IN - ";
+    			if(isset($totalInOut[0]->totalout))
+    				echo $totalInOut[0]->totalout." EUR UIT = ";
+    			else
+    				echo "0 EUR UIT = ";
+    			if(isset($totalInOut[0]->balance))
+    				echo $totalInOut[0]->balance." EUR</b><br>";
+    			else 
+    				echo "0 EUR</b><br>";
+    		}else
+    			echo "<b>Totaal in deze periode: 0 EUR IN - 0 EUR UIT = 0 EUR</b><br>";
     		if(isset($amounts2[0]->balance))
-    			echo "<br>Roze kassa: ".($amounts2[0]->balance - $this->totalout)." EUR";
-    		elseif($this->totalout>0){
-    			echo "<br>Roze kassa: -".$this->totalout." EUR";
+    			echo "<br>Roze kassa: ".($amounts2[0]->balance - $totalInOut[0]->totalout)." EUR";
+    		elseif($totalInOut[0]->totalout>0){
+    			echo "<br>Roze kassa: -".$totalInOut[0]->totalout." EUR";
     		}else
     			echo "<br>Roze kassa: 0 EUR";
-    		echo "<br>DagKassa: ".$this->totalin." EUR";
+    		
+    		if(isset($totalInOut[0]->totalin))
+    			echo "<br>DagKassa: ".$totalInOut[0]->totalin." EUR";
+    		else
+    			echo "<br>DagKassa: 0 EUR";
+    		
     		if(isset($amounts[0]->balance))
     			echo "<br><b>Bedrag in kassa: ".$amounts[0]->balance." EUR</b><br>";
     		else 
@@ -198,6 +223,7 @@ class Register_List_Table extends WP_List_Table {
     	$orderby = !empty($this->getparam["orderby"]) ? mysql_real_escape_string($this->getparam["orderby"]) : 'date';
     	$order = !empty($this->getparam["order"]) ? mysql_real_escape_string($this->getparam["order"]) : 'asc';
     	if(!empty($orderby) & !empty($order)){ $query.=' ORDER BY '.$orderby.' '.$order; }
+    	
  
     	/* -- Pagination parameters -- */
     	//Number of elements in your table?
@@ -285,6 +311,7 @@ class Register_List_Table extends WP_List_Table {
     				echo '<td '.$attributes.'>'.$counter.'</td>';
     			else
     				echo '<td '.$attributes.'>'.$rec->$column_name.'</td>';    
+    			/*
     			switch ($column_name){
     				case "amountin": {
     					$this->totalin += $rec->$column_name;
@@ -295,7 +322,7 @@ class Register_List_Table extends WP_List_Table {
     					$this->totalout += $rec->$column_name;
     					break;
     				}
-    			}			
+    			}	*/		
     		}
     		$counter++;
     		//Close the line    		
@@ -374,6 +401,18 @@ class Register_List_Table extends WP_List_Table {
     	$result = $wpdb->get_results($query);
     	return $result;
     }
+    /*
+     * returns result [totalin, totalout, balance]
+     */
+    function fetchTotalInOut($year,$month){
+    	global $wpdb;
+    	$tablename = $wpdb->prefix."happyaccounting_register";
+    	/* -- Preparing your query -- */
+    	$query = ("SELECT sum(amountin) as totalin, sum(amountout) as totalout, sum(amountin)-sum(amountout) as balance FROM ".$tablename." where date >= DATE('".$year."-".$month."-01') and date <= LAST_DAY(DATE('".$year."-".$month."-01')) ");
+    	
+    	$result = $wpdb->get_results($query);
+    	return $result;
+    }
     function exportCSV(){
 
     	//Get the columns registered in the get_columns
@@ -407,8 +446,8 @@ class Register_List_Table extends WP_List_Table {
     		$period = $this->getparam['year'].'-'.$this->getparam['month'];
     	}
     	     	
-    	$this->totalin=0;
-    	$this->totalout=0;
+    	$totalin=0;
+    	$totalout=0;
     	
     	$queryresult = $this->items;
     	if(!empty($queryresult)){
@@ -427,7 +466,7 @@ class Register_List_Table extends WP_List_Table {
     					else
     						$lineData[]=$row->$column_name;
     				}
-    			switch ($column_name){
+  			switch ($column_name){
     				case "amountin": {
     					$this->totalin += $row->$column_name;
     					$this->count +=1;
@@ -437,7 +476,7 @@ class Register_List_Table extends WP_List_Table {
     					$this->totalout += $row->$column_name;
     					break;
     				}
-    			}		
+    			}	
     			}
     			fputcsv($f, $lineData, $delimiter);
 
@@ -446,8 +485,8 @@ class Register_List_Table extends WP_List_Table {
     		$lineData = [];
     		foreach ( $columns as $column_name => $column_display_name){
     			switch ($column_name){
-    				case "amountin": {$lineData[]=$this->totalin; break;}
-    				case "amountout": {$lineData[]=$this->totalout; break;}
+    				case "amountin": {$lineData[]=$totalin; break;}
+    				case "amountout": {$lineData[]=$totalout; break;}
     				default :  {$lineData[]='';}
     			}
     		}
@@ -476,7 +515,7 @@ class Register_List_Table extends WP_List_Table {
     	
     	$lineData[]="";
     	$lineData[]="Saldo deze maand";
-    	$lineData[]=number_format($this->totalin - $this->totalout,2,',','');
+    	$lineData[]=number_format($totalin - $totalout,2,',','');
     	fputcsv($f, $lineData, $delimiter);
     	$lineData = [];
     	
