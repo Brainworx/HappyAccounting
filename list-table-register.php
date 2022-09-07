@@ -26,7 +26,7 @@ if(!class_exists('WP_List_Table')){
  */
 class Register_List_Table extends WP_List_Table {
 	public $getparam = [];
-	private $totalInOut=[], $count=0;
+	private $totalInOut=[], $count=0, $fulldata, $linecounter;
     
     /** ************************************************************************
      * REQUIRED. Set up a constructor that references the parent constructor. We 
@@ -201,7 +201,7 @@ class Register_List_Table extends WP_List_Table {
     function prepare_items() {
     	global $wpdb, $_wp_column_headers;
     	$screen = get_current_screen();
-   
+   		$this->linecounter=1;
     	$tablename = $wpdb->prefix."happyaccounting_register";
     	
     	if(isset($this->getparam['month'])){
@@ -255,6 +255,7 @@ class Register_List_Table extends WP_List_Table {
         $this->_column_headers = array($columns, $hidden, $sortable);
         
         $data = $wpdb->get_results($query);
+        $this->fulldata = $data;
         /**
          * REQUIRED for pagination. Let's figure out what page the user is currently
          * looking at. We'll need this later, so you should always include it in
@@ -295,7 +296,7 @@ class Register_List_Table extends WP_List_Table {
     	list( $columns, $hidden ) = $this->get_column_info();
     
     	//Loop for each record
-    	$counter = 1;
+    	
     	if(!empty($records)){foreach($records as $rec){
     
     		//Open the line
@@ -308,7 +309,7 @@ class Register_List_Table extends WP_List_Table {
     			if ( in_array( $column_name, $hidden ) ) $style = ' style="display:none;"';
     			$attributes = $class . $style;
     			if($column_display_name=="Id")
-    				echo '<td '.$attributes.'>'.$counter.'</td>';
+    				echo '<td '.$attributes.'>'.$this->linecounter.'</td>';
     			else
     				echo '<td '.$attributes.'>'.$rec->$column_name.'</td>';    
     			/*
@@ -324,7 +325,7 @@ class Register_List_Table extends WP_List_Table {
     				}
     			}	*/		
     		}
-    		$counter++;
+    		$this->linecounter++;
     		//Close the line    		
     		echo'</tr>';
     	}}
@@ -449,7 +450,7 @@ class Register_List_Table extends WP_List_Table {
     	$totalin=0;
     	$totalout=0;
     	
-    	$queryresult = $this->items;
+    	$queryresult = $this->fulldata;
     	if(!empty($queryresult)){
 
     		$counter = 1;
@@ -468,12 +469,12 @@ class Register_List_Table extends WP_List_Table {
     				}
   			switch ($column_name){
     				case "amountin": {
-    					$this->totalin += $row->$column_name;
+    					$totalin += $row->$column_name;
     					$this->count +=1;
     					break;
     				}
     				case "amountout": {
-    					$this->totalout += $row->$column_name;
+    					$totalout += $row->$column_name;
     					break;
     				}
     			}	
