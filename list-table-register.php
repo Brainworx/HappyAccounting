@@ -231,7 +231,7 @@ class Register_List_Table extends WP_List_Table {
     	//How many to display per page?
     	$per_page = 10;
     	//Which page is this?
-    	$paged = !empty($this->getparam["paged"]) ? mysql_real_escape_string($this->getparam["paged"]) : '1';
+    	$paged = !empty($this->getparam["paged"]) ? $this->getparam["paged"] : '1';
     	//Page Number
     	if(empty($paged) || !is_numeric($paged) || $paged<=0 ){ $paged=1; } //How many pages do we have in total? $totalpages = ceil($totalitems/$perpage); //adjust the query to take pagination into account if(!empty($paged) && !empty($perpage)){ $offset=($paged-1)*$perpage; $query.=' LIMIT '.(int)$offset.','.(int)$perpage; } /* -- Register the pagination -- */ 
     	$this->set_pagination_args( array(
@@ -294,9 +294,13 @@ class Register_List_Table extends WP_List_Table {
     
     	//Get the columns registered in the get_columns and get_sortable_columns methods
     	list( $columns, $hidden ) = $this->get_column_info();
-    
-    	//Loop for each record
     	
+    	//what page are we on
+    	$paged = !empty($this->getparam["paged"]) ? $this->getparam["paged"] : '1';
+    	if($paged > 1){
+    		$this->linecounter += ($paged-1) * 10;
+    	}
+    	//Loop for each record    	
     	if(!empty($records)){foreach($records as $rec){
     
     		//Open the line
@@ -311,19 +315,7 @@ class Register_List_Table extends WP_List_Table {
     			if($column_display_name=="Id")
     				echo '<td '.$attributes.'>'.$this->linecounter.'</td>';
     			else
-    				echo '<td '.$attributes.'>'.$rec->$column_name.'</td>';    
-    			/*
-    			switch ($column_name){
-    				case "amountin": {
-    					$this->totalin += $rec->$column_name;
-    					$this->count +=1;
-    					break;
-    				}
-    				case "amountout": {
-    					$this->totalout += $rec->$column_name;
-    					break;
-    				}
-    			}	*/		
+    				echo '<td '.$attributes.'>'.$rec->$column_name.'</td>';    	
     		}
     		$this->linecounter++;
     		//Close the line    		

@@ -22,7 +22,7 @@ if(isset($_GET["export"])){
 //set params
 if(isset($_GET["orderby"])) $regtable->getparam['orderby'] = $_GET["orderby"];
 if(isset($_GET["order"])) $regtable->getparam['order'] = $_GET["order"];
-if(isset($_GET["paged"])) $regtable->getparam['pages'] = $_GET["pages"];
+if(isset($_GET["paged"])) $regtable->getparam['paged'] = $_GET["paged"];
 if(isset($_GET["month"])) $regtable->getparam['month'] = $_GET["month"];
 else $regtable->getparam['month']=date('m');
 if(isset($_GET["year"])) $regtable->getparam['year'] = $_GET["year"];
