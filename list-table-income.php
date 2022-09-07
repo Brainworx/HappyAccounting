@@ -26,7 +26,7 @@ if(!class_exists('WP_List_Table')){
  */
 class Income_List_Table extends WP_List_Table {
 	public $getparam = [];
-	private $totalamount=0,$totalvat=0,$totalnet=0;
+	private $totalamounts=[],$fulldata, $linecounter;
     
     /** ************************************************************************
      * REQUIRED. Set up a constructor that references the parent constructor. We 
@@ -120,8 +120,19 @@ class Income_List_Table extends WP_List_Table {
     	if ( $which == "bottom" ){
     		
     		//The code that goes after the table is there
-    		//echo"Hi, I'm after the table";
-    		echo "<b>Totaal in deze periode: ".$this->totalnet." + ".$this->totalvat." btw = ".$this->totalamount." EUR.</b><br>";
+    		
+    		if(isset($this->totalamounts[0]->totalnet))
+    			echo "<b>Totaal in deze periode: ".$this->totalamounts[0]->totalnet;
+    		else
+    			echo "<b>Totaal in deze periode: 0";
+    		if(isset($this->totalamounts[0]->totalvat))
+    			echo " + ".$this->totalamounts[0]->totalvat." btw = ";
+    		else
+    			echo " + 0 btw = ";
+    		if(isset($this->totalamounts[0]->totalamount))
+    			echo $this->totalamounts[0]->totalamount." EUR.</b><br>";
+    		else
+    			echo "0 EUR.</b><br>";
     		
     		if(isset($this->getparam['quarter'])){
     			$period = $this->getparam['year'].'-Q'.$this->getparam['quarter'];
@@ -234,9 +245,11 @@ class Income_List_Table extends WP_List_Table {
     		$year=date('Y');
     	}
     	
+    	$where = "";
     	if(isset($this->getparam['quarter'])){
     		$quarter = $this->getparam['quarter'];
     		$query = ("SELECT * FROM ".$tablename." where quarter = ".$year.$quarter." ");
+    		$where = "where quarter = ".$year.$quarter;
     	}else{
 	    	if(isset($this->getparam['month'])){
 	    		$month = $this->getparam['month'];
@@ -246,7 +259,9 @@ class Income_List_Table extends WP_List_Table {
 	    	
 	    	/* -- Preparing your query -- */
 	    	$query = ("SELECT * FROM ".$tablename." where date >= DATE('".$year."-".$month."-01') and date <= LAST_DAY(DATE('".$year."-".$month."-01')) ");
+    		$where = "where date >= DATE('".$year."-".$month."-01') and date <= LAST_DAY(DATE('".$year."-".$month."-01')) ";
     	}
+    	$this->totalamounts = $this->FetchTotals($where);
     	/* -- Ordering parameters -- */
     	//Parameters that are going to be used to order the result
     	$orderby = !empty($this->getparam["orderby"]) ? mysql_real_escape_string($this->getparam["orderby"]) : 'date';
@@ -259,7 +274,7 @@ class Income_List_Table extends WP_List_Table {
     	//How many to display per page?
     	$per_page = 10;
     	//Which page is this?
-    	$paged = !empty($this->getparam["paged"]) ? mysql_real_escape_string($this->getparam["paged"]) : '1';
+    	$paged = !empty($this->getparam["paged"]) ? $this->getparam["paged"] : '1';
     	//Page Number
     	if(empty($paged) || !is_numeric($paged) || $paged<=0 ){ $paged=1; } //How many pages do we have in total? $totalpages = ceil($totalitems/$perpage); //adjust the query to take pagination into account if(!empty($paged) && !empty($perpage)){ $offset=($paged-1)*$perpage; $query.=' LIMIT '.(int)$offset.','.(int)$perpage; } /* -- Register the pagination -- */ 
     	$this->set_pagination_args( array(
@@ -283,6 +298,8 @@ class Income_List_Table extends WP_List_Table {
         $this->_column_headers = array($columns, $hidden, $sortable);
         
         $data = $wpdb->get_results($query);
+        $this->fulldata=$data;
+        $this->linecounter=1;
         /**
          * REQUIRED for pagination. Let's figure out what page the user is currently
          * looking at. We'll need this later, so you should always include it in
@@ -321,9 +338,14 @@ class Income_List_Table extends WP_List_Table {
     
     	//Get the columns registered in the get_columns and get_sortable_columns methods
     	list( $columns, $hidden ) = $this->get_column_info();
-    
+    	
+    	//what page are we on
+    	$paged = !empty($this->getparam["paged"]) ? $this->getparam["paged"] : '1';
+    	if($paged > 1){
+    		$this->linecounter += ($paged-1) * 10;
+    	}
+    	
     	//Loop for each record
-    	$counter = 1;
     	if(!empty($records)){foreach($records as $rec){
     
     		//Open the line
@@ -336,16 +358,12 @@ class Income_List_Table extends WP_List_Table {
     			if ( in_array( $column_name, $hidden ) ) $style = ' style="display:none;"';
     			$attributes = $class . $style;
     			if($column_display_name=="Id")
-    				echo '<td '.$attributes.'>'.$counter.'</td>';    
+    				echo '<td '.$attributes.'>'.$this->linecounter.'</td>';    
     			else
-    				echo '<td '.$attributes.'>'.$rec->$column_name.'</td>';    
-    			switch ($column_name){
-    				case "amount": {$this->totalamount += $rec->$column_name; break;}
-    				case "netamount": {$this->totalnet += $rec->$column_name; break;}
-    				case "vatamount": {$this->totalvat += $rec->$column_name; break;}
-    			}			
+    				echo '<td '.$attributes.'>'.$rec->$column_name.'</td>';   
+
     		}
-    		$counter++;
+    		$this->linecounter++;
     		//Close the line    		
     		echo'</tr>';
     	}}
@@ -485,6 +503,26 @@ class Income_List_Table extends WP_List_Table {
     	return $result;
     }
     /*
+     * returns result  [total, total_net]
+     */
+    function fetchTotals($where){
+    	global $wpdb;
+    	$tablename = $wpdb->prefix."happyaccounting_income";
+    	
+    	$query = ("SELECT sum(amount) as totalamount, sum(netamount) as totalnet, sum(vatamount) as totalvat FROM ".$tablename." ".$where);
+    	
+    	$result = $wpdb->get_results($query);
+    	if(empty($result[0]->totalamount))
+    		$result[0]->totalamount=0;
+    	if(empty($result[0]->totalnet))
+    		$result[0]->totalnet=0;
+    	if(empty($result[0]->totalvat))
+    		$result[0]->totalvat=0;
+    	
+    	return $result;
+    	}
+    	
+    /*
      * returns result [total, total_net]
      */
     function fetchQIncome($quarter){
@@ -501,6 +539,7 @@ class Income_List_Table extends WP_List_Table {
     		$result[0]->total_net=0;
     	return $result;
     }
+    
     function exportCSV(){
     	//Get the columns registered in the get_columns 
     	list( $columns ) = $this->get_column_info();
@@ -522,7 +561,7 @@ class Income_List_Table extends WP_List_Table {
     		$fields[]=$column_display_name;
     	}
     	
-    	$queryresult = $this->items;
+    	$queryresult = $this->fulldata;
     
     	// Set headers to download file rather than displayed
     	header('Content-Type: text/csv');
@@ -534,9 +573,6 @@ class Income_List_Table extends WP_List_Table {
     	
     	if(!empty($queryresult)){
     		
-    		$this->totalamount=0;
-    		$this->totalnet=0;
-    		$this->totalvat=0;
     		$counter = 1;
     			
     		// Output each row of the data, format line as csv and write to file pointer
@@ -551,11 +587,6 @@ class Income_List_Table extends WP_List_Table {
     					else
     						$lineData[]=$row->$column_name;
     				}
-    				switch ($column_name){
-    					case "amount": {$this->totalamount += $row->$column_name; break;}
-    					case "netamount": {$this->totalnet += $row->$column_name; break;}
-    					case "vatamount": {$this->totalvat += $row->$column_name; break;}
-    				}
     			}
     			fputcsv($f, $lineData, $delimiter);
     			$counter++;
@@ -564,9 +595,9 @@ class Income_List_Table extends WP_List_Table {
     		foreach ( $columns as $column_name => $column_display_name){
     			switch ($column_name){
     				case "date": {$lineData[]='Totaal'; break;}
-    				case "amount": {$lineData[]=number_format($this->totalamount,2,',',''); break;}
-    				case "netamount": {$lineData[]=number_format($this->totalnet,2,',',''); break;}
-    				case "vatamount": {$lineData[]=number_format($this->totalvat,2,',',''); break;}
+    				case "amount": {$lineData[]=number_format($this->totalamounts[0]->totalamount,2,',',''); break;}
+    				case "netamount": {$lineData[]=number_format($this->totalamounts[0]->totalnet,2,',',''); break;}
+    				case "vatamount": {$lineData[]=number_format($this->totalamounts[0]->totalvat,2,',',''); break;}
     				default :  {$lineData[]='';}
     			}
     		}

@@ -24,7 +24,7 @@ if(isset($_GET["export"])){
 //set params
 if(isset($_GET["orderby"])) $inctable->getparam['orderby'] = $_GET["orderby"];
 if(isset($_GET["order"])) $inctable->getparam['order'] = $_GET["order"];
-if(isset($_GET["paged"])) $inctable->getparam['pages'] = $_GET["pages"];
+if(isset($_GET["paged"])) $inctable->getparam['paged'] = $_GET["paged"];
 if(isset($_GET["quarter"])) $inctable->getparam['quarter'] = $_GET["quarter"];
 if(isset($_GET["month"])) $inctable->getparam['month'] = $_GET["month"];
 else $inctable->getparam['month']=date('m');
