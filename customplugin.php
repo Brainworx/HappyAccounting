@@ -73,16 +73,15 @@ function customplugin_table(){
 			    SET var_Vat = NEW.amount-var_Net;
 				IF EXISTS (SELECT * FROM $incometable where date = NEW.date and vat=NEW.vat) THEN
 					UPDATE $incometable 
-							SET vat = NEW.vat, amount = amount + NEW.amount,
-								vatamount = vatamount + var_Vat, netamount = netamount + var_Net
+							SET amount = amount + NEW.amount
 								WHERE date = NEW.date;
 				ELSE
-					INSERT INTO $incometable(date,quarter,vat,amount,vatamount,netamount) 
+					INSERT INTO $incometable(date,quarter,vat,amount) 
 								values(NEW.date,concat(year(NEW.date),
 								CASE WHEN month(NEW.date)<4 THEN 1
 								WHEN month(NEW.date) < 7 THEN 2
 								WHEN month(NEW.date) < 10 THEN 3
-								ELSE 4 END),NEW.vat,NEW.amount,var_Vat,var_Net);
+								ELSE 4 END),NEW.vat,NEW.amount);
 				END IF;
 				IF (NEW.paymenttype = 'cash') THEN
 			        IF EXISTS (SELECT * FROM $registertable where date = NEW.date) THEN

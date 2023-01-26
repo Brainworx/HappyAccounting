@@ -151,10 +151,10 @@ class Income_List_Table extends WP_List_Table {
     			$period = $this->getparam['year']."-01 tem ".$this->getparam['year'].'-'.$this->getparam['month'];
     		}
     		echo "<br><b>Resultaten ".$period."</b><br>";
-    		echo "Inkomsten: ".$amounts_in[0]->total." EUR<br>";
+    		echo "Inkomsten: ".$amounts_in[0]->totalamount." EUR<br>";
     		echo "Uitgaven: ".$amounts[0]->total." EUR<br>";
-    		echo "Resultaat: <b>".($amounts_in[0]->total + $amounts[0]->total)." EUR</b>";
-    		$outnet = number_format( $amounts_in[0]->total_net+($amounts[0]->total/1.21),2,',','');
+    		echo "Resultaat: <b>".($amounts_in[0]->totalamount + $amounts[0]->total)." EUR</b>";
+    		$outnet = number_format( $amounts_in[0]->totalnet+($amounts[0]->total/1.21),2,'.','');
     		echo " ( ".$outnet." EUR excl BTW )<br>";
     		
     		echo sprintf('<br><a href="?page=%s">Naar all betalingen</a>','alltransactions');
@@ -179,9 +179,7 @@ class Income_List_Table extends WP_List_Table {
     			'id'=>__('Id'),
     			'date'=>__('Datum'),
     			'amount'=>__('Bedrag'),
-    			'vat'=>__('Btw'),
-    			'vatamount'=>__('Btw bedrag'),
-    			'netamount'=>__('Netto')
+    			'vat'=>__('Btw')
     	);
     }
     /** ************************************************************************
@@ -259,7 +257,8 @@ class Income_List_Table extends WP_List_Table {
 	    	
 	    	/* -- Preparing your query -- */
 	    	$query = ("SELECT * FROM ".$tablename." where date >= DATE('".$year."-".$month."-01') and date <= LAST_DAY(DATE('".$year."-".$month."-01')) ");
-    		$where = "where date >= DATE('".$year."-".$month."-01') and date <= LAST_DAY(DATE('".$year."-".$month."-01')) ";
+    		//for totals
+	    	$where = "where date >= DATE('".$year."-".$month."-01') and date <= LAST_DAY(DATE('".$year."-".$month."-01')) ";
     	}
     	$this->totalamounts = $this->FetchTotals($where);
     	/* -- Ordering parameters -- */
@@ -434,9 +433,9 @@ class Income_List_Table extends WP_List_Table {
     	$tablename = $wpdb->prefix."happyaccounting_transaction";
     	/* -- Preparing your query -- */
     	if(!isset($mindate)){
-    		$mindate = date("Y-01-01");
+    		$mindate = "'".date("Y-01-01")."'";
     	}
-    	$query = ("SELECT sum(amount) as total FROM ".$tablename." where paymenttype in ('cash-out','factuur-out') and date >= '".$mindate."'");
+    	$query = ("SELECT sum(amount) as total FROM ".$tablename." where paymenttype in ('cash-out','factuur-out') and date >= ".$mindate);
     	if(isset($maxdate)){
     		$query = $query .' and date < '.$maxdate;
     	}
@@ -490,16 +489,19 @@ class Income_List_Table extends WP_List_Table {
     	if(!isset($mindate)){
     		$mindate = "'".date("Y-1-1")."'";
     	}
-    	$query = ("SELECT sum(amount) as total, sum(netamount) as total_net FROM ".$tablename." where date >= ".$mindate);
+    	$query = ("SELECT sum(amount) as totalamount,vat FROM ".$tablename." where date >= ".$mindate);
     	if(isset($maxdate)){
     		$query = $query . ' and date < '.$maxdate;
     	}
+    	$query = $query . ' group by vat';
     
     	$result = $wpdb->get_results($query);
-    	if(empty($result[0]->total))
-    		$result[0]->total=0;
-    	if(empty($result[0]->total_net))
-    		$result[0]->total_net=0;
+    	if(empty($result[0]->totalamount)){
+    		$result[0]->totalamount=0;
+    		$result[0]->totalnet=0;
+    	}else{
+    		$result[0]->totalnet=number_format( $result[0]->totalamount/((100+$result[0]->vat)/100),2,'.','');
+    	}
     	return $result;
     }
     /*
@@ -509,15 +511,18 @@ class Income_List_Table extends WP_List_Table {
     	global $wpdb;
     	$tablename = $wpdb->prefix."happyaccounting_income";
     	
-    	$query = ("SELECT sum(amount) as totalamount, sum(netamount) as totalnet, sum(vatamount) as totalvat FROM ".$tablename." ".$where);
+    	$query = ("SELECT sum(amount) as totalamount,vat FROM ".$tablename." ".$where . ' group by vat');
+    
     	
     	$result = $wpdb->get_results($query);
-    	if(empty($result[0]->totalamount))
+    	if(empty($result[0]->totalamount)){
     		$result[0]->totalamount=0;
-    	if(empty($result[0]->totalnet))
     		$result[0]->totalnet=0;
-    	if(empty($result[0]->totalvat))
     		$result[0]->totalvat=0;
+    	}else{
+    		$result[0]->totalnet=number_format( $result[0]->totalamount/((100+$result[0]->vat)/100),2,'.','');
+    		$result[0]->totalvat=number_format( $result[0]->totalamount-$result[0]->totalnet,2,'.','');
+    	}
     	
     	return $result;
     	}
@@ -529,14 +534,18 @@ class Income_List_Table extends WP_List_Table {
     	global $wpdb;
     	$tablename = $wpdb->prefix."happyaccounting_income";
     	/* -- Preparing your query -- */
-    	$query = ("SELECT sum(amount) as total, sum(netamount) as total_net FROM ".$tablename);
-    	$query = $query . ' where quarter = '.$quarter;
+    	$query = ("SELECT sum(amount) as totalamount,vat FROM ".$tablename);
+    	$query = $query . ' where quarter = '.$quarter. ' group by vat';
 
     	$result = $wpdb->get_results($query);
-    	if(empty($result[0]->total))
-    		$result[0]->total=0;
-    	if(empty($result[0]->total_net))
-    		$result[0]->total_net=0;
+    	if(empty($result[0]->totalamount)){
+    		$result[0]->totalamount=0;
+    		$result[0]->totalnet=0;
+    		$result[0]->totalvat=0;
+    	}else{
+    		$result[0]->totalnet=number_format( $result[0]->totalamount/((100+$result[0]->vat)/100),2,'.','');
+    		$result[0]->totalvat=number_format( $result[0]->totalamount-$result[0]->totalnet,2,'.','');
+    	}
     	return $result;
     }
     
@@ -583,7 +592,7 @@ class Income_List_Table extends WP_List_Table {
     					$lineData[]=$counter;
     				else{
     					if(is_numeric($row->$column_name))
-    						$lineData[]=number_format($row->$column_name,2,',','');
+    						$lineData[]=number_format($row->$column_name,2,'.','');
     					else
     						$lineData[]=$row->$column_name;
     				}
@@ -591,13 +600,32 @@ class Income_List_Table extends WP_List_Table {
     			fputcsv($f, $lineData, $delimiter);
     			$counter++;
     		}
+    		//total line 1/3
     		$lineData = [];
     		foreach ( $columns as $column_name => $column_display_name){
     			switch ($column_name){
-    				case "date": {$lineData[]='Totaal'; break;}
-    				case "amount": {$lineData[]=number_format($this->totalamounts[0]->totalamount,2,',',''); break;}
-    				case "netamount": {$lineData[]=number_format($this->totalamounts[0]->totalnet,2,',',''); break;}
-    				case "vatamount": {$lineData[]=number_format($this->totalamounts[0]->totalvat,2,',',''); break;}
+    				case "amount": {$lineData[]='Totaal'; break;}
+    				case "vat": {$lineData[]=number_format($this->totalamounts[0]->totalamount,2,'.',''); break;}
+    				default :  {$lineData[]='';}
+    			}
+    		}
+    		fputcsv($f, $lineData, $delimiter);
+    		//total line 2/3
+    		$lineData = [];
+    		foreach ( $columns as $column_name => $column_display_name){
+    			switch ($column_name){
+    				case "amount": {$lineData[]='Netto'; break;}
+    				case "vat": {$lineData[]=number_format($this->totalamounts[0]->totalnet,2,'.',''); break;}
+    				default :  {$lineData[]='';}
+    			}
+    		}
+    		fputcsv($f, $lineData, $delimiter);
+    		//total line 3/3
+    		$lineData = [];
+    		foreach ( $columns as $column_name => $column_display_name){
+    			switch ($column_name){
+    				case "amount": {$lineData[]='BTW'; break;}
+    				case "vat": {$lineData[]=number_format($this->totalamounts[0]->totalvat,2,'.',''); break;}
     				default :  {$lineData[]='';}
     			}
     		}
