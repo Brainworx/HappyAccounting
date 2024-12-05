@@ -131,7 +131,7 @@ class Appointments_List_Table extends WP_List_Table {
     	/* -- Preparing your query -- */
     	$query = ("SELECT A.id, B.bookingStart, A.customerId, CONCAT(C.firstName,' ',C.lastName)as'name', C.email 
 			FROM ".$bookingstable." A join ".$appointmenttable." B on A.appointmentId = B.id 
-			join ".$customertable." C on A.customerId = C.id where B.bookingStart >= now() - INTERVAL 15 day 
+			join ".$customertable." C on A.customerId = C.id where A.status = 'approved' and B.bookingStart >= now() - INTERVAL 15 day 
 			and B.bookingStart <= DATE_FORMAT(now(), '%Y-%m-%d 23:59:59') and not EXISTS (select * from ".$transactiontable." D where B.id = D.app_id) ");
     	
     	/* -- Ordering parameters -- */
