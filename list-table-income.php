@@ -272,6 +272,7 @@ class Income_List_Table extends WP_List_Table {
     	$totalitems = $wpdb->query($query); //return the total number of affected rows
     	//How many to display per page?
     	$per_page = 10;
+    	$totalpages = ceil($totalitems/$per_page);
     	//Which page is this?
     	$paged = !empty($this->getparam["paged"]) ? $this->getparam["paged"] : '1';
     	//Page Number
@@ -441,9 +442,9 @@ class Income_List_Table extends WP_List_Table {
     	}
 
     	$result = $wpdb->get_results($query);
-    	if($result[0] === null){
-    	    $result[0] = new stdClass();
-    	}
+    	if(empty($result))
+    	    $result[] = new stdClass();
+    	
     	if(empty($result[0]->total))
    			$result[0]->total=0;
     	return $result;
@@ -478,9 +479,9 @@ class Income_List_Table extends WP_List_Table {
     	$query = $query . ' and date >= "'.$datefrom.'" and date <= "'.$dateto.'"';
 
     	$result = $wpdb->get_results($query);
-    	if($result[0] === null){
-    	    $result[0] = new stdClass();
-    	}
+    	if(empty($result))
+    	    $result[] = new stdClass();
+    	
     	if(empty($result[0]->total))
     		$result[0]->total=0;
     	return $result;
@@ -502,14 +503,14 @@ class Income_List_Table extends WP_List_Table {
     	$query = $query . ' group by vat';
     
     	$result = $wpdb->get_results($query);
-    	if($result[0] === null){
-    	    $result[0] = new stdClass();
-    	}
+    	if(empty($result))
+    	    $result[] = new stdClass();
+    	
     	if(empty($result[0]->totalamount)){
     		$result[0]->totalamount=0;
     		$result[0]->totalnet=0;
     	}else{
-    		$result[0]->totalnet=number_format( $result[0]->totalamount/((100+$result[0]->vat)/100),2,'.','');
+    		$result[0]->totalnet=number_format( $result[0]->totalamount/((100+$result[0]->vat)/100),2,',','');
     	}
     	return $result;
     }
@@ -523,16 +524,16 @@ class Income_List_Table extends WP_List_Table {
     	$query = ("SELECT sum(amount) as totalamount,vat FROM ".$tablename." ".$where . ' group by vat');
 
     	$result = $wpdb->get_results($query);    
-        if($result[0] === null){
-            $result[0] = new stdClass();
-        }
+    	if(empty($result))
+            $result[] = new stdClass();
+       
     	if(empty($result[0]->totalamount)){
     		$result[0]->totalamount=0;
     		$result[0]->totalnet=0;
     		$result[0]->totalvat=0;
     	}else{
-    		$result[0]->totalnet=number_format( $result[0]->totalamount/((100+$result[0]->vat)/100),2,'.','');
-    		$result[0]->totalvat=number_format( $result[0]->totalamount-$result[0]->totalnet,2,'.','');
+    		$result[0]->totalnet=number_format( $result[0]->totalamount/((100+$result[0]->vat)/100),2,',','');
+    		$result[0]->totalvat=number_format( $result[0]->totalamount-$result[0]->totalnet,2,',','');
     	}
     	
     	return $result;
@@ -549,9 +550,9 @@ class Income_List_Table extends WP_List_Table {
     	$query = $query . ' where quarter = '.$quarter. ' group by vat';
 
     	$result = $wpdb->get_results($query);
-    	if($result[0] === null){
-    	    $result[0] = new stdClass();
-    	}
+    	if(empty($result))
+    	    $result[] = new stdClass();
+    	
     	if(empty($result[0]->totalamount)){
     		$result[0]->totalamount=0;
     		$result[0]->totalnet=0;
@@ -606,7 +607,7 @@ class Income_List_Table extends WP_List_Table {
     					$lineData[]=$counter;
     				else{
     					if(is_numeric($row->$column_name))
-    						$lineData[]=number_format($row->$column_name,2,'.','');
+    						$lineData[]=number_format($row->$column_name,2,',','');
     					else
     						$lineData[]=$row->$column_name;
     				}
@@ -619,7 +620,7 @@ class Income_List_Table extends WP_List_Table {
     		foreach ( $columns as $column_name => $column_display_name){
     			switch ($column_name){
     				case "amount": {$lineData[]='Totaal'; break;}
-    				case "vat": {$lineData[]=number_format($this->totalamounts[0]->totalamount,2,'.',''); break;}
+    				case "vat": {$lineData[]=number_format($this->totalamounts[0]->totalamount,2,',',''); break;}
     				default :  {$lineData[]='';}
     			}
     		}
@@ -629,7 +630,7 @@ class Income_List_Table extends WP_List_Table {
     		foreach ( $columns as $column_name => $column_display_name){
     			switch ($column_name){
     				case "amount": {$lineData[]='Netto'; break;}
-    				case "vat": {$lineData[]=number_format($this->totalamounts[0]->totalnet,2,'.',''); break;}
+    				case "vat": {$lineData[]=number_format($this->totalamounts[0]->totalnet,2,',',''); break;}
     				default :  {$lineData[]='';}
     			}
     		}
@@ -639,7 +640,7 @@ class Income_List_Table extends WP_List_Table {
     		foreach ( $columns as $column_name => $column_display_name){
     			switch ($column_name){
     				case "amount": {$lineData[]='BTW'; break;}
-    				case "vat": {$lineData[]=number_format($this->totalamounts[0]->totalvat,2,'.',''); break;}
+    				case "vat": {$lineData[]=number_format($this->totalamounts[0]->totalvat,2,',',''); break;}
     				default :  {$lineData[]='';}
     			}
     		}
