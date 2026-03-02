@@ -510,7 +510,7 @@ class Income_List_Table extends WP_List_Table {
     		$result[0]->totalamount=0;
     		$result[0]->totalnet=0;
     	}else{
-    		$result[0]->totalnet=number_format( $result[0]->totalamount/((100+$result[0]->vat)/100),2,',','');
+    		$result[0]->totalnet=number_format( $result[0]->totalamount/((100+$result[0]->vat)/100),2,'.','');
     	}
     	return $result;
     }
@@ -524,6 +524,7 @@ class Income_List_Table extends WP_List_Table {
     	$query = ("SELECT sum(amount) as totalamount,vat FROM ".$tablename." ".$where . ' group by vat');
 
     	$result = $wpdb->get_results($query);    
+
     	if(empty($result))
             $result[] = new stdClass();
        
@@ -532,8 +533,8 @@ class Income_List_Table extends WP_List_Table {
     		$result[0]->totalnet=0;
     		$result[0]->totalvat=0;
     	}else{
-    		$result[0]->totalnet=number_format( $result[0]->totalamount/((100+$result[0]->vat)/100),2,',','');
-    		$result[0]->totalvat=number_format( $result[0]->totalamount-$result[0]->totalnet,2,',','');
+    		$result[0]->totalnet=number_format( $result[0]->totalamount/((100+$result[0]->vat)/100),2,'.','');
+    		$result[0]->totalvat=number_format( $result[0]->totalamount-$result[0]->totalnet,2,'.','');
     	}
     	
     	return $result;

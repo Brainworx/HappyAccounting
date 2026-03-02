@@ -230,6 +230,7 @@ class Register_List_Table extends WP_List_Table {
     	$totalitems = $wpdb->query($query); //return the total number of affected rows
     	//How many to display per page?
     	$per_page = 10;
+    	$totalpages = ceil($totalitems/$per_page);
     	//Which page is this?
     	$paged = !empty($this->getparam["paged"]) ? $this->getparam["paged"] : '1';
     	//Page Number
@@ -407,6 +408,8 @@ class Register_List_Table extends WP_List_Table {
     	return $result;
     }
     function exportCSV(){
+        $currentmonth=date('m');
+        $currentyear=date('Y');
 
     	//Get the columns registered in the get_columns
     	list( $columns ) = $this->get_column_info();
@@ -476,10 +479,11 @@ class Register_List_Table extends WP_List_Table {
     			$counter++;
     		}
     		$lineData = [];
+
     		foreach ( $columns as $column_name => $column_display_name){
     			switch ($column_name){
-    				case "amountin": {$lineData[]=$totalin; break;}
-    				case "amountout": {$lineData[]=$totalout; break;}
+    			    case "amountin": {$lineData[]=number_format($totalin,2,',','');	break;}
+    			    case "amountout": {$lineData[]=number_format($totalout,2,',',''); break;}
     				default :  {$lineData[]='';}
     			}
     		}

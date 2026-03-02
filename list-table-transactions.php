@@ -150,6 +150,7 @@ class Transactions_List_Table extends WP_List_Table {
     	$totalitems = $wpdb->query($query); //return the total number of affected rows
     	//How many to display per page?
     	$per_page = 10;
+    	$totalpages = ceil($totalitems/$per_page);
     	//Which page is this?
     	$paged = !empty($this->getparam["paged"]) ? mysql_real_escape_string($this->getparam["paged"]) : '1';
     	//Page Number
